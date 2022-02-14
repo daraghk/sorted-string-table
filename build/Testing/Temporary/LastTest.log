@@ -1,0 +1,30 @@
+Start testing: Feb 14 20:20 GMT
+----------------------------------------------------------
+1/1 Testing: MemTableTests.BasicInsertion
+1/1 Test: MemTableTests.BasicInsertion
+Command: "/Users/daraghking/Documents/Repos/sorted-string-table/build/tests" "--gtest_filter=MemTableTests.BasicInsertion" "--gtest_also_run_disabled_tests"
+Directory: /Users/daraghking/Documents/Repos/sorted-string-table/build
+"MemTableTests.BasicInsertion" start time: Feb 14 20:20 GMT
+Output:
+----------------------------------------------------------
+Running main() from /Users/daraghking/Documents/Repos/sorted-string-table/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = MemTableTests.BasicInsertion
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from MemTableTests
+[ RUN      ] MemTableTests.BasicInsertion
+[       OK ] MemTableTests.BasicInsertion (0 ms)
+[----------] 1 test from MemTableTests (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"MemTableTests.BasicInsertion" end time: Feb 14 20:20 GMT
+"MemTableTests.BasicInsertion" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Feb 14 20:20 GMT

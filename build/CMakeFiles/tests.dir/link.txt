@@ -1,0 +1,1 @@
+/opt/homebrew/bin/g++-11 -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk -mmacosx-version-min=11.2 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/tests.dir/tests.cc.o -o tests  lib/libgtest_main.a lib/libgtest.a 
