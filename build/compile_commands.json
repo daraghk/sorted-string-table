@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/Users/daraghking/Documents/Repos/sorted-string-table/build",
+  "command": "/opt/homebrew/bin/g++-11   -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk -mmacosx-version-min=11.2 -o CMakeFiles/app.dir/main.cpp.o -c /Users/daraghking/Documents/Repos/sorted-string-table/main.cpp",
+  "file": "/Users/daraghking/Documents/Repos/sorted-string-table/main.cpp"
+}
+]
