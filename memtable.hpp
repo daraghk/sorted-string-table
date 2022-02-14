@@ -9,6 +9,7 @@ class Memtable
 public:
     Memtable(unsigned int input_capacity) : capacity(input_capacity), table(), current_size(0) {}
     int get_capacity() { return capacity; }
+    int get_size() { return current_size; }
     void insert(K key, V value);
     optional<V> find(K key);
 
@@ -25,7 +26,7 @@ void Memtable<K, V>::insert(K key, V value)
     if (current_size < capacity)
     {
         table.insert({key, value});
-        current_size++;
+        ++current_size;
     }
 }
 
