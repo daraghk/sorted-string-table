@@ -1,5 +1,6 @@
 #include <map>
 #include <optional>
+#include <vector>
 
 using namespace std;
 
@@ -12,6 +13,7 @@ public:
     int get_size() { return current_size; }
     void insert(K key, V value);
     optional<V> find(K key);
+    vector<pair<K, V>> get_all_elements();
 
 private:
     unsigned int capacity;
@@ -39,4 +41,15 @@ optional<V> Memtable<K, V>::find(K key)
         return optional<V>{result->second};
     }
     return nullopt;
+}
+
+template <typename K, typename V>
+vector<pair<K, V>> Memtable<K, V>::get_all_elements()
+{
+    vector<pair<K, V>> result;
+    for (auto it = table.begin(); it != table.end(); ++it)
+    {
+        result.push_back(make_pair(it->first, it->second));
+    }
+    return result;
 }
