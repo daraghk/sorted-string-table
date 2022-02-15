@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "memtable.hpp"
 
-TEST(MemTableTests, BasicInsertion)
+TEST(MemtableTests, BasicInsertion)
 {
   Memtable<string, int> memtable(2);
   EXPECT_EQ(memtable.get_capacity(), 2);
@@ -19,7 +19,7 @@ TEST(MemTableTests, BasicInsertion)
   EXPECT_EQ(memtable.get_size(), 2);
 }
 
-TEST(MemTableTests, BasicFind)
+TEST(MemtableTests, BasicFind)
 {
   Memtable<string, int> memtable(2);
   EXPECT_EQ(memtable.get_capacity(), 2);
@@ -38,7 +38,7 @@ TEST(MemTableTests, BasicFind)
   EXPECT_ANY_THROW(result_find_non_existent.value());
 }
 
-TEST(MemTableTests, Ordering)
+TEST(MemtableTests, Ordering)
 {
   Memtable<int, string> memtable(2);
   EXPECT_EQ(memtable.get_capacity(), 2);
