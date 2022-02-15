@@ -11,19 +11,19 @@ public:
     Memtable(unsigned int input_capacity) : capacity(input_capacity), table(), current_size(0) {}
     int get_capacity() { return capacity; }
     int get_size() { return current_size; }
-    void insert(K key, V value);
-    optional<V> find(K key);
+    void insert(const K key, const V value);
+    optional<V> find(const K key);
     vector<pair<K, V>> get_all_elements();
 
 private:
-    unsigned int capacity;
+    const unsigned int capacity;
     int current_size;
     map<K, V> table;
     void write_to_file();
 };
 
 template <typename K, typename V>
-void Memtable<K, V>::insert(K key, V value)
+void Memtable<K, V>::insert(const K key, const V value)
 {
     if (current_size < capacity)
     {
@@ -33,12 +33,13 @@ void Memtable<K, V>::insert(K key, V value)
 }
 
 template <typename K, typename V>
-optional<V> Memtable<K, V>::find(K key)
+optional<V> Memtable<K, V>::find(const K key)
 {
-    auto result = table.find(key);
-    if (result != table.end())
+    const auto find_result = table.find(key);
+    if (find_result != table.end())
     {
-        return optional<V>{result->second};
+        const auto value = find_result->second;
+        return optional<V>{value};
     }
     return nullopt;
 }
@@ -46,10 +47,10 @@ optional<V> Memtable<K, V>::find(K key)
 template <typename K, typename V>
 vector<pair<K, V>> Memtable<K, V>::get_all_elements()
 {
-    vector<pair<K, V>> result;
+    vector<pair<K, V>> key_value_pairs;
     for (auto it = table.begin(); it != table.end(); ++it)
     {
-        result.push_back(make_pair(it->first, it->second));
+        key_value_pairs.push_back(make_pair(it->first, it->second));
     }
-    return result;
+    return key_value_pairs;
 }
