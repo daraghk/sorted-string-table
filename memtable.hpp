@@ -1,6 +1,9 @@
 #include <map>
 #include <optional>
 #include <vector>
+#include <fstream>
+#include <iterator>
+#include <string>
 
 using namespace std;
 
@@ -29,6 +32,11 @@ void Memtable<K, V>::insert(const K key, const V value)
     {
         table.insert({key, value});
         ++current_size;
+        if(current_size == capacity){
+            write_to_file();
+            table.clear();
+            current_size = 0;
+        }
     }
 }
 
@@ -53,4 +61,13 @@ vector<pair<K, V>> Memtable<K, V>::get_all_elements()
         key_value_pairs.push_back(make_pair(it->first, it->second));
     }
     return key_value_pairs;
+}
+
+template <typename K, typename V>
+void Memtable<K,V>::write_to_file(){
+    auto all_elements = get_all_elements();
+    ofstream output_file("./example.txt");
+    for(const auto& [key, value] : all_elements){
+        output_file << key << ":" << value << endl;
+    }
 }

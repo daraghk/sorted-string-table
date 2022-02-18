@@ -3,26 +3,22 @@
 
 TEST(MemtableTests, BasicInsertion)
 {
-  Memtable<string, int> memtable(2);
-  EXPECT_EQ(memtable.get_capacity(), 2);
+  Memtable<string, int> memtable(3);
+  EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 0);
 
   memtable.insert("first", 1);
   memtable.insert("second", 2);
 
-  //add two elements, below capacity
-  EXPECT_EQ(memtable.get_capacity(), 2);
-  EXPECT_EQ(memtable.get_size(), 2);
-
-  //add another element, above capacity now, get_size should stay 2
-  memtable.insert("third", 3);
+  //add two elements
+  EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 2);
 }
 
 TEST(MemtableTests, BasicFind)
 {
-  Memtable<string, int> memtable(2);
-  EXPECT_EQ(memtable.get_capacity(), 2);
+  Memtable<string, int> memtable(3);
+  EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 0);
 
   memtable.insert("first", 1);
@@ -40,8 +36,8 @@ TEST(MemtableTests, BasicFind)
 
 TEST(MemtableTests, Ordering)
 {
-  Memtable<int, string> memtable(2);
-  EXPECT_EQ(memtable.get_capacity(), 2);
+  Memtable<int, string> memtable(3);
+  EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 0);
 
   //key insert order 2-1
@@ -58,4 +54,19 @@ TEST(MemtableTests, Ordering)
 
   EXPECT_EQ(second_element.first, 2);
   EXPECT_EQ(second_element.second, "abc");
+}
+
+TEST(MemtableTests, InsertionBeyondCapacity)
+{
+  Memtable<string, int> memtable(2);
+  EXPECT_EQ(memtable.get_capacity(), 2);
+  EXPECT_EQ(memtable.get_size(), 0);
+
+  memtable.insert("first", 1);
+  memtable.insert("second", 2);
+
+  //two elements added, table should be cleared now again as it reached max capacity
+  //and have size = 0 with no elements as these should be written to file
+  EXPECT_EQ(memtable.get_size(), 0); 
+  EXPECT_EQ(memtable.get_all_elements().size(), 0); 
 }
