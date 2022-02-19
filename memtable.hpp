@@ -11,7 +11,10 @@ template <typename K, typename V>
 class Memtable
 {
 public:
-    Memtable(unsigned int input_capacity, string memtable_file_path) : capacity(input_capacity), table(), current_size(0), memtable_file(memtable_file_path) {}
+    Memtable(unsigned int input_capacity, string memtable_file_path) : capacity(input_capacity),
+                                                                       table(),
+                                                                       current_size(0),
+                                                                       memtable_file(memtable_file_path) {}
     int get_capacity() { return capacity; }
     int get_size() { return current_size; }
     void insert(const K key, const V value);
