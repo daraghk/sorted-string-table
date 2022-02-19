@@ -6,7 +6,7 @@ using namespace std;
 
 int main()
 {
-    Memtable<string, int> memtable(10);
+    Memtable<string, int> memtable(10, "./_test_");
     memtable.insert("first", 1);
     memtable.insert("second", 2);
     memtable.insert("third", 3);
