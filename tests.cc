@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "memtable.hpp"
+#include "sorted_string_table.hpp"
 
 TEST(MemtableTests, BasicInsertion)
 {
@@ -90,4 +90,46 @@ TEST(MemtableTests, LargeNumberOfElements)
   memtable.insert(to_string(large_capacity), large_capacity);
   EXPECT_EQ(memtable.get_capacity(), large_capacity);
   EXPECT_EQ(memtable.get_size(), 0);
+}
+
+TEST(SortedStringTableTests, BasicInsertion)
+{
+  SortedStringTable<string, int> ss_table(10, "./_test_");
+
+  ss_table.insert("first", 1);
+  ss_table.insert("second", 2);
+
+  EXPECT_EQ(ss_table.get_size(), 2);
+}
+
+TEST(SortedStringTableTests, BasicFindOnMemtable)
+{
+  SortedStringTable<string, int> ss_table(10, "./_test_");
+
+  ss_table.insert("first", 1);
+  ss_table.insert("second", 2);
+
+  EXPECT_EQ(ss_table.get_size(), 2);
+
+  auto find_result = ss_table.find("first");
+  EXPECT_TRUE(find_result.has_value());
+  EXPECT_EQ(find_result.value(), 1);
+}
+
+TEST(SortedStringTableTests, BasicFindOnMostRecentMemtableWrite)
+{
+  SortedStringTable<string, int> ss_table(2, "./_test_");
+
+  ss_table.insert("first", 1);
+  ss_table.insert("second", 2);
+
+  EXPECT_EQ(ss_table.get_size(), 2);
+
+  auto first_find_result = ss_table.find("first");
+  EXPECT_TRUE(first_find_result.has_value());
+  EXPECT_EQ(first_find_result.value(), 1);
+
+  auto second_find_result = ss_table.find("second");
+  EXPECT_TRUE(second_find_result.has_value());
+  EXPECT_EQ(second_find_result.value(), 2);
 }

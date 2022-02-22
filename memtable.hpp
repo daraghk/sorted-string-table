@@ -11,10 +11,10 @@ template <typename K, typename V>
 class Memtable
 {
 public:
-    Memtable(unsigned int input_capacity, string memtable_file_path) : capacity(input_capacity),
-                                                                       table(),
-                                                                       current_size(0),
-                                                                       memtable_file(memtable_file_path) {}
+    Memtable(unsigned int capacity, string memtable_file_path) : capacity(capacity),
+                                                                 table(),
+                                                                 current_size(0),
+                                                                 memtable_file_path(memtable_file_path) {}
     int get_capacity() { return capacity; }
     int get_size() { return current_size; }
     void insert(const K key, const V value);
@@ -25,23 +25,20 @@ private:
     const unsigned int capacity;
     int current_size;
     map<K, V> table;
-    string memtable_file;
+    string memtable_file_path;
     void write_to_file();
 };
 
 template <typename K, typename V>
 void Memtable<K, V>::insert(const K key, const V value)
 {
-    if (current_size < capacity)
+    table.insert({key, value});
+    ++current_size;
+    if (current_size == capacity)
     {
-        table.insert({key, value});
-        ++current_size;
-        if (current_size == capacity)
-        {
-            write_to_file();
-            table.clear();
-            current_size = 0;
-        }
+        write_to_file();
+        table.clear();
+        current_size = 0;
     }
 }
 
@@ -72,7 +69,7 @@ template <typename K, typename V>
 void Memtable<K, V>::write_to_file()
 {
     auto all_elements = get_all_elements();
-    ofstream output_file(memtable_file);
+    ofstream output_file(memtable_file_path);
     for (const auto &[key, value] : all_elements)
     {
         output_file << key << ":" << value << endl;
