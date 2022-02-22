@@ -38,7 +38,6 @@ void SortedStringTable<K, V>::insert(const K key, const V value)
 template <typename K, typename V>
 optional<V> SortedStringTable<K, V>::find(const K key)
 {
-    // check memtable
     auto memtable_find_result = memtable.find(key);
     if (memtable_find_result.has_value())
     {
@@ -46,18 +45,14 @@ optional<V> SortedStringTable<K, V>::find(const K key)
     }
     else
     {
-        // search over most recent memtable write
-        // do a basic linear search first over whole file
         ifstream most_recent_memtable_write(memtable_main_filepath);
         string input_line;
         while (getline(most_recent_memtable_write, input_line))
         {
-            size_t key_value_delimeter_position = input_line.find(':');
-            string key_read = input_line.substr(0, key_value_delimeter_position);
-            string value_read = input_line.substr(key_value_delimeter_position + 1);
-            if (key == key_read)
+            pair<string, string> key_value_pair = parse_key_value(input_line);
+            if (key_value_pair.first == key)
             {
-                V return_value = convert_to_correct_numerical_type<V>(value_read);
+                V return_value = convert_to_correct_numerical_type<V>(key_value_pair.second);
                 return optional<V>{return_value};
             }
         }
@@ -67,7 +62,15 @@ optional<V> SortedStringTable<K, V>::find(const K key)
 
 template <typename T>
 requires IsNumber<T>
-    T convert_to_correct_numerical_type(const string &input)
+    T convert_to_correct_numerical_type(const string &value_as_string)
 {
-    return is_integral_v<T> ? stoi(input) : stod(input);
+    return is_integral_v<T> ? stoi(value_as_string) : stod(value_as_string);
+}
+
+pair<string, string> parse_key_value(const string &input_line)
+{
+    size_t key_value_delimeter_position = input_line.find(':');
+    string key_read = input_line.substr(0, key_value_delimeter_position);
+    string value_read = input_line.substr(key_value_delimeter_position + 1);
+    return make_pair(key_read, value_read);
 }
