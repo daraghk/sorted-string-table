@@ -43,34 +43,39 @@ optional<V> SortedStringTable<K, V>::find(const K key)
     {
         return memtable_find_result;
     }
-    else
+    return linear_search<K, V>(memtable_main_filepath, key);
+}
+
+template <typename K, typename V>
+requires IsStringLike<K> && IsNumberOrStringLike<V>
+    optional<V> linear_search(const string &memtable_file_path, const K key)
+{
+    ifstream most_recent_memtable_write(memtable_file_path);
+    string input_line;
+    while (getline(most_recent_memtable_write, input_line))
     {
-        ifstream most_recent_memtable_write(memtable_main_filepath);
-        string input_line;
-        while (getline(most_recent_memtable_write, input_line))
+        auto key_value_delimeter_position = input_line.find(':');
+        if (compare_keys<K>(key, input_line, key_value_delimeter_position))
         {
-            pair<string, string> key_value_pair = parse_key_value(input_line);
-            if (key_value_pair.first == key)
-            {
-                V return_value = convert_to_correct_numerical_type<V>(key_value_pair.second);
-                return optional<V>{return_value};
-            }
+            auto value_read = input_line.substr(key_value_delimeter_position + 1);
+            auto return_value = convert_to_correct_numerical_type<V>(value_read);
+            return optional<V>{return_value};
         }
     }
     return nullopt;
 }
 
-template <typename T>
-requires IsNumber<T>
-    T convert_to_correct_numerical_type(const string &value_as_string)
+template <typename K>
+requires IsStringLike<K>
+bool compare_keys(const K key, const string &input_line, const size_t delimeter_position)
 {
-    return is_integral_v<T> ? stoi(value_as_string) : stod(value_as_string);
+    string key_read = input_line.substr(0, delimeter_position);
+    return key_read == key;
 }
 
-pair<string, string> parse_key_value(const string &input_line)
+template <typename V>
+requires IsNumber<V>
+    V convert_to_correct_numerical_type(const string &value_as_string)
 {
-    size_t key_value_delimeter_position = input_line.find(':');
-    string key_read = input_line.substr(0, key_value_delimeter_position);
-    string value_read = input_line.substr(key_value_delimeter_position + 1);
-    return make_pair(key_read, value_read);
+    return is_integral_v<V> ? stoi(value_as_string) : stod(value_as_string);
 }
