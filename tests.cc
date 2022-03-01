@@ -116,7 +116,7 @@ TEST(SortedStringTableTests, BasicFindOnMemtable)
   EXPECT_EQ(find_result.value(), 1);
 }
 
-TEST(SortedStringTableTests, BasicFindOnMostRecentMemtableWrite)
+TEST(SortedStringTableTests, BasicFindsOnMostRecentMemtableWrite)
 {
   SortedStringTable<string, int> ss_table(2, "./_test_");
 

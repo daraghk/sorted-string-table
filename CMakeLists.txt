@@ -14,7 +14,15 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+FetchContent_Declare(fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG master
+)
+FetchContent_MakeAvailable(fmt)
+
 add_executable(app main.cpp)
+
+target_link_libraries(app fmt::fmt)
 
 enable_testing()
 
@@ -22,6 +30,7 @@ add_executable(tests tests.cc)
 
 target_link_libraries(
   tests
+  fmt::fmt
   gtest_main
 )
 
