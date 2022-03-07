@@ -133,3 +133,47 @@ TEST(SortedStringTableTests, BasicFindsOnMostRecentMemtableWrite)
   EXPECT_TRUE(second_find_result.has_value());
   EXPECT_EQ(second_find_result.value(), 2);
 }
+
+TEST(MemtableTests, RetrieveKeyOffsets)
+{
+  unsigned int large_capacity = 100'000;
+  Memtable<string, int> memtable(large_capacity, "./memtable_test_output");
+  EXPECT_EQ(memtable.get_capacity(), large_capacity);
+  EXPECT_EQ(memtable.get_size(), 0);
+
+  // insert up to one below capacity
+  for (int i = 0; i < large_capacity - 1; ++i)
+  {
+    memtable.insert(to_string(i), i);
+  }
+
+  // insert max_capacity element to trigger writing the memtable to file
+  memtable.insert(to_string(large_capacity), large_capacity);
+  EXPECT_EQ(memtable.get_capacity(), large_capacity);
+  EXPECT_EQ(memtable.get_size(), 0);
+
+  auto key_offsets = memtable.get_key_offsets();
+  EXPECT_TRUE(key_offsets.has_value());
+}
+
+TEST(SortedStringTableTests, FindOnLargeWrittenMemtableFile)
+{
+  unsigned int large_capacity = 100'000;
+  SortedStringTable<string, int> ss_table(large_capacity, "./_test_large_search");
+
+  // insert up to one below capacity
+  for (int i = 0; i < large_capacity - 1; ++i)
+  {
+    ss_table.insert(to_string(i), i);
+  }
+
+  // insert max_capacity element to trigger writing the memtable to file
+  ss_table.insert(to_string(large_capacity), large_capacity);
+
+  // assert correct size
+  EXPECT_EQ(ss_table.get_size(), large_capacity);
+
+  auto search_result = ss_table.find("100");
+  EXPECT_TRUE(search_result.has_value());
+  EXPECT_EQ(search_result.value(), 100);
+}

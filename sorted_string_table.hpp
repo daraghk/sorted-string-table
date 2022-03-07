@@ -45,20 +45,18 @@ optional<V> SortedStringTable<K, V>::find(const K key)
     {
         return memtable_find_result;
     }
-
-    return linear_search<K, V>(memtable_main_filepath, key);
+    const auto offsets = memtable.get_key_offsets();
+    // check key offsets versus key to select starting point to read from
+    auto starting_point = 0;
+    return linear_search_over_memtable_file_segment<K, V>(memtable_main_filepath, key, starting_point);
 }
 
 template <typename K, typename V>
 requires IsStringLike<K> && IsNumberOrStringLike<V>
-    optional<V> linear_search(const string &memtable_file_path, const K key)
+    optional<V> linear_search_over_memtable_file_segment(const string &memtable_file_path, const K key, int starting_point)
 {
-    //need to determine starting point first
-    //where to read from
-    //compare key to key offsets stored -> search from correct beginning
     ifstream most_recent_memtable_write(memtable_file_path);
-    auto starting_point = 0;
-    most_recent_memtable_write.seekg(starting_point, ios::beg);
+    most_recent_memtable_write.seekg(starting_point);
     const char new_offset_beginning = '&';
     const auto search_result = search_stream_for_key_until<K, V>(most_recent_memtable_write, key, new_offset_beginning);
     return search_result;

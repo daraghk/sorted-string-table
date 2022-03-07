@@ -15,21 +15,22 @@ public:
     Memtable(unsigned int capacity, string memtable_file_path) : capacity(capacity),
                                                                  table(),
                                                                  current_size(0),
-                                                                 memtable_file_path(memtable_file_path) {}
+                                                                 memtable_file_path(memtable_file_path),
+                                                                 current_key_offsets(nullopt) {}
     int get_capacity() { return capacity; }
     int get_size() { return current_size; }
+    optional<vector<pair<K, int>>> get_key_offsets() { return current_key_offsets; };
     void insert(const K key, const V value);
     optional<V> find(const K key);
     vector<pair<K, V>> get_all_elements();
 
 private:
     const unsigned int capacity;
-
-    //TODO update below so this can be passed in the constructor.
     const unsigned int key_offset_frequency = 5;
     int current_size;
     map<K, V> table;
     string memtable_file_path;
+    optional<vector<pair<K, int>>> current_key_offsets;
     void write_to_file();
 };
 
@@ -74,28 +75,30 @@ void Memtable<K, V>::write_to_file()
 {
     auto all_elements = get_all_elements();
     const auto number_of_elements = all_elements.size();
+
     ofstream output_file(memtable_file_path);
+    vector<pair<K, int>> key_offsets;
 
     auto index = 0;
-    vector<pair<K, int>> key_offsets;
     auto accumulated_size = 0;
+
     for (const auto &[key, value] : all_elements)
     {
         string line_to_write;
         if (index != 0 && index != number_of_elements - 1 && index % key_offset_frequency == 0)
         {
             line_to_write = fmt::format("&{}:{}\n", key, value);
-            auto size_of_line = line_to_write.size();
-            accumulated_size += size_of_line;
+            // push accumulated size so far as offset
             key_offsets.push_back(make_pair(key, accumulated_size));
         }
         else
         {
             line_to_write = fmt::format("{}:{}\n", key, value);
-            auto size_of_line = line_to_write.size();
-            accumulated_size += size_of_line;
         }
+        auto size_of_line = line_to_write.size();
+        accumulated_size += size_of_line;
         ++index;
         output_file << line_to_write;
     }
+    current_key_offsets = key_offsets;
 }
