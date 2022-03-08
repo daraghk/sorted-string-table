@@ -46,7 +46,7 @@ optional<V> SortedStringTable<K, V>::find(const K key)
         return memtable_find_result;
     }
     const auto offsets = memtable.get_key_offsets();
-    // check key offsets versus key to select starting point to read from
+    // TODO : check key offsets versus key to select starting point to read from
     auto starting_point = 0;
     return linear_search_over_memtable_file_segment<K, V>(memtable_main_filepath, key, starting_point);
 }

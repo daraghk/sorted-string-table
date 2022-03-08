@@ -156,7 +156,7 @@ TEST(MemtableTests, RetrieveKeyOffsets)
   EXPECT_TRUE(key_offsets.has_value());
 }
 
-TEST(SortedStringTableTests, FindOnLargeWrittenMemtableFile)
+TEST(SortedStringTableTests, SearchSegmentsOnWrittenMemtableFile)
 {
   unsigned int large_capacity = 100'000;
   SortedStringTable<string, int> ss_table(large_capacity, "./_test_large_search");
@@ -173,7 +173,12 @@ TEST(SortedStringTableTests, FindOnLargeWrittenMemtableFile)
   // assert correct size
   EXPECT_EQ(ss_table.get_size(), large_capacity);
 
-  auto search_result = ss_table.find("100");
-  EXPECT_TRUE(search_result.has_value());
-  EXPECT_EQ(search_result.value(), 100);
+  auto success_search_result = ss_table.find("100");
+  EXPECT_TRUE(success_search_result.has_value());
+  EXPECT_EQ(success_search_result.value(), 100);
+
+  // below should only work now because search is not fully implemented
+  // only search first memtable file segment right now
+  auto fail_search_result = ss_table.find("2");
+  EXPECT_FALSE(fail_search_result.has_value());
 }
