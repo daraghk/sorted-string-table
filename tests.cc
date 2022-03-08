@@ -173,12 +173,18 @@ TEST(SortedStringTableTests, SearchSegmentsOnWrittenMemtableFile)
   // assert correct size
   EXPECT_EQ(ss_table.get_size(), large_capacity);
 
-  auto success_search_result = ss_table.find("100");
-  EXPECT_TRUE(success_search_result.has_value());
-  EXPECT_EQ(success_search_result.value(), 100);
+  // perform find for key which should be in first segment of memtable file
+  auto first_find = ss_table.find("100");
+  EXPECT_TRUE(first_find.has_value());
+  EXPECT_EQ(first_find.value(), 100);
 
-  // below should only work now because search is not fully implemented
-  // only search first memtable file segment right now
-  auto fail_search_result = ss_table.find("2");
-  EXPECT_FALSE(fail_search_result.has_value());
+  // perform find for key which should not be in first segment of memtable file
+  auto second_find = ss_table.find("2");
+  EXPECT_TRUE(second_find.has_value());
+  EXPECT_EQ(second_find.value(), 2);
+
+  // perform find for key which will be used as a key offset
+  auto third_find = ss_table.find("200");
+  EXPECT_TRUE(third_find.has_value());
+  EXPECT_EQ(third_find.value(), 200);
 }

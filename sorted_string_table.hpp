@@ -45,10 +45,39 @@ optional<V> SortedStringTable<K, V>::find(const K key)
     {
         return memtable_find_result;
     }
+
     const auto offsets = memtable.get_key_offsets();
-    // TODO : check key offsets versus key to select starting point to read from
-    auto starting_point = 0;
-    return linear_search_over_memtable_file_segment<K, V>(memtable_main_filepath, key, starting_point);
+    if (offsets.has_value())
+    {
+        const auto starting_point = determine_search_start_point<K, V>(key, offsets.value());
+        cout << starting_point << endl;
+        if (starting_point != -1)
+        {
+            return linear_search_over_memtable_file_segment<K, V>(memtable_main_filepath, key, starting_point);
+        }
+    }
+    // no offsets
+    return linear_search_over_memtable_file_segment<K, V>(memtable_main_filepath, key, 0);
+}
+
+template <typename K, typename V>
+int determine_search_start_point(const K key, const vector<pair<K, int>> &offsets)
+{
+    const K first_offset_key = offsets[0].first;
+    if (key < first_offset_key)
+    {
+        return 0;
+    }
+
+    for (auto i = 1; i < offsets.size(); ++i)
+    {
+        const K current_offset_key = offsets[i].first;
+        if (key < current_offset_key)
+        {
+            return offsets[i - 1].second;
+        }
+    }
+    return -1;
 }
 
 template <typename K, typename V>
@@ -66,29 +95,33 @@ template <typename K, typename V>
 optional<V> search_stream_for_key_until(ifstream &stream, const K key, const char end_of_read)
 {
     string input_line;
+    int line_number = 0;
     while (getline(stream, input_line))
     {
         const auto starting_char = input_line[0];
-        if (starting_char == end_of_read)
+        bool reached_end = starting_char == end_of_read && line_number != 0;
+        if (reached_end)
         {
             return nullopt;
         }
         const auto key_value_delimeter_position = input_line.find(':');
-        if (compare_keys<K>(key, input_line, key_value_delimeter_position))
+        if (compare_keys<K>(key, input_line, key_value_delimeter_position, line_number))
         {
             const auto value_read = input_line.substr(key_value_delimeter_position + 1);
             const auto return_value = convert_to_correct_numerical_type<V>(value_read);
             return optional<V>{return_value};
         }
+        ++line_number;
     }
     return nullopt;
 }
 
 template <typename K>
 requires IsStringLike<K>
-bool compare_keys(const K key, const string &input_line, const size_t delimeter_position)
+bool compare_keys(const K key, const string &input_line, const size_t delimeter_position, const int line_number)
 {
-    string key_read = input_line.substr(0, delimeter_position);
+    // when no offsets present below fails because it's purpose is to skip &, of which there will be none
+    string key_read = line_number == 0 ? input_line.substr(1, delimeter_position) : input_line.substr(0, delimeter_position);
     return key_read == key;
 }
 

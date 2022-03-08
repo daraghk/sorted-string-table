@@ -100,5 +100,5 @@ void Memtable<K, V>::write_to_file()
         ++index;
         output_file << line_to_write;
     }
-    current_key_offsets = key_offsets;
+    current_key_offsets = key_offsets.size() > 0 ? optional{key_offsets} : nullopt;
 }
