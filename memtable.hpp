@@ -28,7 +28,9 @@ public:
                                                                                        memtable_config(memtable_config) {}
     int get_capacity() { return capacity; }
     int get_size() { return current_size; }
+
     optional<vector<pair<K, int>>> get_key_offsets() { return current_key_offsets; };
+
     void insert(const K key, const V value);
     optional<V> find(const K key);
     vector<pair<K, V>> get_all_key_value_pairs();
@@ -37,10 +39,15 @@ private:
     const unsigned int capacity;
     int current_size;
     map<K, V> table;
+
     MemtableConfig memtable_config;
     string memtable_file_path;
+
     optional<vector<pair<K, int>>> current_key_offsets;
+
     void write_data_to_file();
+    string key_value_string_to_write(K key, V value);
+    string key_value_offset_string_to_write(K key, V value);
 };
 
 template <typename K, typename V>
@@ -97,12 +104,12 @@ void Memtable<K, V>::write_data_to_file()
         bool valid_key_offset_index = index != 0 && index != number_of_elements - 1 && index % memtable_config.key_offset_frequency == 0;
         if (valid_key_offset_index)
         {
-            key_value_line_to_write = fmt::format("{}{}{}{}\n", memtable_config.key_offset_indicator, key, memtable_config.key_value_delimeter, value);
+            key_value_line_to_write = key_value_offset_string_to_write(key, value);
             key_offsets.push_back(make_pair(key, accumulated_offset_from_start));
         }
         else
         {
-            key_value_line_to_write = fmt::format("{}{}{}\n", key, memtable_config.key_value_delimeter, value);
+            key_value_line_to_write = key_value_string_to_write(key, value);
         }
         auto size_of_line = key_value_line_to_write.size();
         accumulated_offset_from_start += size_of_line;
@@ -111,3 +118,16 @@ void Memtable<K, V>::write_data_to_file()
     }
     current_key_offsets = key_offsets.size() > 0 ? optional{key_offsets} : nullopt;
 }
+
+template <typename K, typename V>
+string Memtable<K, V>::key_value_string_to_write(K key, V value)
+{
+    return fmt::format("{}{}{}\n", key, memtable_config.key_value_delimeter, value);
+}
+
+template <typename K, typename V>
+string Memtable<K, V>::key_value_offset_string_to_write(K key, V value)
+{
+    return fmt::format("{}{}{}{}\n", memtable_config.key_offset_indicator, key, memtable_config.key_value_delimeter, value);
+}
+
