@@ -36,7 +36,7 @@ private:
     optional<V> search_stream_for_key_until_next_offset(ifstream &stream, const K key);
 
     bool check_key_equality(const K key, const string &input_line, const size_t delimeter_position);
-    V convert_to_correct_numerical_type(const string &value_as_string);
+    V convert_value_to_correct_numerical_type(const string &value_as_string);
 };
 
 template <typename K, typename V>
@@ -49,7 +49,7 @@ void SortedStringTable<K, V>::insert(const K key, const V value)
 template <typename K, typename V>
 optional<V> SortedStringTable<K, V>::find(const K key)
 {
-    auto memtable_find_result = memtable.find(key);
+    const auto memtable_find_result = memtable.find(key);
     if (memtable_find_result.has_value())
     {
         return memtable_find_result;
@@ -102,8 +102,8 @@ optional<V> SortedStringTable<K, V>::search_stream_for_key_until_next_offset(ifs
     while (getline(stream, input_line))
     {
         const auto starting_char = input_line[0];
-        bool reached_end = starting_char == memtable_config.key_offset_indicator && line_number != 0;
-        if (reached_end)
+        bool reached_end_of_segment = starting_char == memtable_config.key_offset_indicator && line_number != 0;
+        if (reached_end_of_segment)
         {
             return nullopt;
         }
@@ -111,7 +111,7 @@ optional<V> SortedStringTable<K, V>::search_stream_for_key_until_next_offset(ifs
         if (check_key_equality(key, input_line, key_value_delimeter_position))
         {
             const auto value_read = input_line.substr(key_value_delimeter_position + 1);
-            const auto return_value = convert_to_correct_numerical_type(value_read);
+            const auto return_value = convert_value_to_correct_numerical_type(value_read);
             return optional<V>{return_value};
         }
         ++line_number;
@@ -129,7 +129,7 @@ bool SortedStringTable<K, V>::check_key_equality(const K key, const string &inpu
 
 template <typename K, typename V>
 requires IsNumber<V>
-    V SortedStringTable<K, V>::convert_to_correct_numerical_type(const string &value_as_string)
+    V SortedStringTable<K, V>::convert_value_to_correct_numerical_type(const string &value_as_string)
 {
     return is_integral_v<V> ? stoi(value_as_string) : stod(value_as_string);
 }
