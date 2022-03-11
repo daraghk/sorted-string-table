@@ -8,15 +8,23 @@
 
 using namespace std;
 
+struct MemtableConfig
+{
+    char key_value_delimeter = ':';
+    char key_offset_indicator = '&';
+    unsigned int key_offset_frequency = 5;
+};
+
 template <typename K, typename V>
 class Memtable
 {
 public:
-    Memtable(unsigned int capacity, string memtable_file_path) : capacity(capacity),
-                                                                 table(),
-                                                                 current_size(0),
-                                                                 memtable_file_path(memtable_file_path),
-                                                                 current_key_offsets(nullopt) {}
+    Memtable(const unsigned int capacity, const string memtable_file_path, const MemtableConfig &memtable_config) : capacity(capacity),
+                                                                                                                    table(),
+                                                                                                                    current_size(0),
+                                                                                                                    memtable_file_path(memtable_file_path),
+                                                                                                                    current_key_offsets(nullopt),
+                                                                                                                    memtable_config(memtable_config) {}
     int get_capacity() { return capacity; }
     int get_size() { return current_size; }
     optional<vector<pair<K, int>>> get_key_offsets() { return current_key_offsets; };
@@ -26,9 +34,9 @@ public:
 
 private:
     const unsigned int capacity;
-    const unsigned int key_offset_frequency = 5;
     int current_size;
     map<K, V> table;
+    MemtableConfig memtable_config;
     string memtable_file_path;
     optional<vector<pair<K, int>>> current_key_offsets;
     void write_to_file();
@@ -85,7 +93,7 @@ void Memtable<K, V>::write_to_file()
     for (const auto &[key, value] : all_elements)
     {
         string line_to_write;
-        if (index != 0 && index != number_of_elements - 1 && index % key_offset_frequency == 0)
+        if (index != 0 && index != number_of_elements - 1 && index % memtable_config.key_offset_frequency == 0)
         {
             line_to_write = fmt::format("&{}:{}\n", key, value);
             // push accumulated size so far as offset

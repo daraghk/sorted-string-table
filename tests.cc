@@ -3,7 +3,8 @@
 
 TEST(MemtableTests, BasicInsertion)
 {
-  Memtable<string, int> memtable(3, "./_test_");
+  MemtableConfig memtable_config;
+  Memtable<string, int> memtable(3, "./_test_", memtable_config);
   EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -17,7 +18,8 @@ TEST(MemtableTests, BasicInsertion)
 
 TEST(MemtableTests, BasicFind)
 {
-  Memtable<string, int> memtable(3, "./_test_");
+  MemtableConfig memtable_config;
+  Memtable<string, int> memtable(3, "./_test_", memtable_config);
   EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -36,7 +38,9 @@ TEST(MemtableTests, BasicFind)
 
 TEST(MemtableTests, Ordering)
 {
-  Memtable<int, string> memtable(3, "./_test_");
+
+  MemtableConfig memtable_config;
+  Memtable<int, string> memtable(3, "./_test_", memtable_config);
   EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -58,7 +62,9 @@ TEST(MemtableTests, Ordering)
 
 TEST(MemtableTests, InsertionBeyondCapacity)
 {
-  Memtable<string, int> memtable(2, "./_test_");
+  MemtableConfig memtable_config;
+
+  Memtable<string, int> memtable(2, "./_test_", memtable_config);
   EXPECT_EQ(memtable.get_capacity(), 2);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -74,7 +80,8 @@ TEST(MemtableTests, InsertionBeyondCapacity)
 TEST(MemtableTests, LargeNumberOfElements)
 {
   unsigned int large_capacity = 100000;
-  Memtable<string, int> memtable(large_capacity, "./memtable_test_output");
+  MemtableConfig memtable_config;
+  Memtable<string, int> memtable(large_capacity, "./memtable_test_output", memtable_config);
   EXPECT_EQ(memtable.get_capacity(), large_capacity);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -94,7 +101,8 @@ TEST(MemtableTests, LargeNumberOfElements)
 
 TEST(SortedStringTableTests, BasicInsertion)
 {
-  SortedStringTable<string, int> ss_table(10, "./_test_");
+  MemtableConfig memtable_config;
+  SortedStringTable<string, int> ss_table(10, "./_test_", memtable_config);
 
   ss_table.insert("first", 1);
   ss_table.insert("second", 2);
@@ -104,7 +112,8 @@ TEST(SortedStringTableTests, BasicInsertion)
 
 TEST(SortedStringTableTests, BasicFindOnMemtable)
 {
-  SortedStringTable<string, int> ss_table(10, "./_test_");
+  MemtableConfig memtable_config;
+  SortedStringTable<string, int> ss_table(10, "./_test_", memtable_config);
 
   ss_table.insert("first", 1);
   ss_table.insert("second", 2);
@@ -118,7 +127,8 @@ TEST(SortedStringTableTests, BasicFindOnMemtable)
 
 TEST(SortedStringTableTests, BasicFindsOnMostRecentMemtableWrite)
 {
-  SortedStringTable<string, int> ss_table(2, "./_test_");
+  MemtableConfig memtable_config;
+  SortedStringTable<string, int> ss_table(2, "./_test_", memtable_config);
 
   ss_table.insert("first", 1);
   ss_table.insert("second", 2);
@@ -137,7 +147,8 @@ TEST(SortedStringTableTests, BasicFindsOnMostRecentMemtableWrite)
 TEST(MemtableTests, RetrieveKeyOffsets)
 {
   unsigned int large_capacity = 100'000;
-  Memtable<string, int> memtable(large_capacity, "./memtable_test_output");
+  MemtableConfig memtable_config;
+  Memtable<string, int> memtable(large_capacity, "./memtable_test_output", memtable_config);
   EXPECT_EQ(memtable.get_capacity(), large_capacity);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -159,7 +170,8 @@ TEST(MemtableTests, RetrieveKeyOffsets)
 TEST(SortedStringTableTests, SearchSegmentsOnWrittenMemtableFile)
 {
   unsigned int large_capacity = 100'000;
-  SortedStringTable<string, int> ss_table(large_capacity, "./_test_large_search");
+  MemtableConfig memtable_config;
+  SortedStringTable<string, int> ss_table(large_capacity, "./_test_large_search", memtable_config);
 
   // insert up to one below capacity
   for (int i = 0; i < large_capacity - 1; ++i)
@@ -172,6 +184,11 @@ TEST(SortedStringTableTests, SearchSegmentsOnWrittenMemtableFile)
 
   // assert correct size
   EXPECT_EQ(ss_table.get_size(), large_capacity);
+
+  // perform find for key which should be first in the memtable file
+  auto zero_find = ss_table.find("0");
+  EXPECT_TRUE(zero_find.has_value());
+  EXPECT_EQ(zero_find.value(), 0);
 
   // perform find for key which should be in first segment of memtable file
   auto first_find = ss_table.find("100");
