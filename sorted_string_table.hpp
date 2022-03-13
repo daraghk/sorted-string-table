@@ -2,6 +2,9 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include "memtable_search.hpp"
+
+using namespace memtable_search_functions;
 
 template <typename T>
 concept IsStringLike = is_convertible_v<T, string_view>;
@@ -28,13 +31,6 @@ private:
     int current_size;
     MemtableConfig memtable_config;
     Memtable<K, V> memtable;
-
-    int determine_search_start_point(const K key, const vector<pair<K, int>> &memtable_offsets);
-    optional<V> linear_search_over_memtable_file_segment(const K key, int starting_point);
-    optional<V> search_stream_for_key_until_next_offset(ifstream &stream, const K key);
-
-    bool check_key_equality(const K key, const string &input_line, const size_t delimeter_position);
-    V convert_value_to_correct_numerical_type(const string &value_as_string);
 };
 
 template <typename K, typename V>
@@ -56,79 +52,8 @@ optional<V> SortedStringTable<K, V>::find(const K key)
     const auto offsets = memtable.get_key_offsets();
     if (offsets.has_value())
     {
-        const auto starting_point = determine_search_start_point(key, offsets.value());
-        return linear_search_over_memtable_file_segment(key, starting_point);
+        const auto starting_point = memtable_search_functions::determine_search_start_point<K, V>(key, offsets.value());
+        return memtable_search_functions::linear_search_over_memtable_file_segment<K, V>(memtable_config, key, starting_point);
     }
-    return linear_search_over_memtable_file_segment(key, 0);
-}
-
-template <typename K, typename V>
-int SortedStringTable<K, V>::determine_search_start_point(const K key, const vector<pair<K, int>> &memtable_offsets)
-{
-    const K first_offset_key = memtable_offsets[0].first;
-    if (key < first_offset_key)
-    {
-        return 0;
-    }
-
-    for (auto i = 1; i < memtable_offsets.size(); ++i)
-    {
-        const K current_offset_key = memtable_offsets[i].first;
-        if (key < current_offset_key)
-        {
-            return memtable_offsets[i - 1].second;
-        }
-    }
-    return 0;
-}
-
-template <typename K, typename V>
-requires IsStringLike<K> && IsNumberOrStringLike<V>
-    optional<V> SortedStringTable<K, V>::linear_search_over_memtable_file_segment(const K key, int starting_point)
-{
-    const auto memtable_file_path = memtable_config.file_path;
-    ifstream most_recent_memtable_write(memtable_file_path);
-    most_recent_memtable_write.seekg(starting_point);
-    const auto search_result = search_stream_for_key_until_next_offset(most_recent_memtable_write, key);
-    return search_result;
-}
-
-template <typename K, typename V>
-optional<V> SortedStringTable<K, V>::search_stream_for_key_until_next_offset(ifstream &stream, const K key)
-{
-    string input_line;
-    int line_number = 0;
-    while (getline(stream, input_line))
-    {
-        const auto starting_char = input_line[0];
-        bool reached_end_of_segment = starting_char == memtable_config.key_offset_indicator && line_number != 0;
-        if (reached_end_of_segment)
-        {
-            return nullopt;
-        }
-        const auto key_value_delimeter_position = input_line.find(memtable_config.key_value_delimeter);
-        if (check_key_equality(key, input_line, key_value_delimeter_position))
-        {
-            const auto value_read = input_line.substr(key_value_delimeter_position + 1);
-            const auto return_value = convert_value_to_correct_numerical_type(value_read);
-            return optional<V>{return_value};
-        }
-        ++line_number;
-    }
-    return nullopt;
-}
-
-template <typename K, typename V>
-requires IsStringLike<K>
-bool SortedStringTable<K, V>::check_key_equality(const K key, const string &input_line, const size_t delimeter_position)
-{
-    return input_line[0] == memtable_config.key_offset_indicator ? input_line.substr(1, delimeter_position - 1) == key
-                                                                 : input_line.substr(0, delimeter_position) == key;
-}
-
-template <typename K, typename V>
-requires IsNumber<V>
-    V SortedStringTable<K, V>::convert_value_to_correct_numerical_type(const string &value_as_string)
-{
-    return is_integral_v<V> ? stoi(value_as_string) : stod(value_as_string);
+    return memtable_search_functions::linear_search_over_memtable_file_segment<K,V>(memtable_config, key, 0);
 }
