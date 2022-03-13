@@ -13,22 +13,22 @@ struct MemtableConfig
     char key_value_delimeter = ':';
     char key_offset_indicator = '&';
     unsigned int key_offset_frequency = 5;
+    unsigned int capacity;
+    string file_path;
 };
 
 template <typename K, typename V>
 class Memtable
 {
 public:
-    Memtable(const unsigned int capacity,
-             const string memtable_file_path, const MemtableConfig &memtable_config) : capacity(capacity),
-                                                                                       table(),
-                                                                                       current_size(0),
-                                                                                       memtable_file_path(memtable_file_path),
-                                                                                       current_key_offsets(nullopt),
-                                                                                       memtable_config(memtable_config) {}
-    int get_capacity() { return capacity; }
+    Memtable(const MemtableConfig &memtable_config) : table(),
+                                                      current_size(0),
+                                                      current_key_offsets(nullopt),
+                                                      memtable_config(memtable_config) {}
+    int get_capacity() { return memtable_config.capacity; }
     int get_size() { return current_size; }
 
+    bool is_key_offset_index(int current_index, int end_index);
     optional<vector<pair<K, int>>> get_key_offsets() { return current_key_offsets; };
 
     void insert(const K key, const V value);
@@ -36,12 +36,9 @@ public:
     vector<pair<K, V>> get_all_key_value_pairs();
 
 private:
-    const unsigned int capacity;
     int current_size;
     map<K, V> table;
-
     MemtableConfig memtable_config;
-    string memtable_file_path;
 
     optional<vector<pair<K, int>>> current_key_offsets;
 
@@ -55,7 +52,7 @@ void Memtable<K, V>::insert(const K key, const V value)
 {
     table.insert({key, value});
     ++current_size;
-    if (current_size == capacity)
+    if (current_size == memtable_config.capacity)
     {
         write_data_to_file();
         table.clear();
@@ -90,19 +87,19 @@ template <typename K, typename V>
 void Memtable<K, V>::write_data_to_file()
 {
     const auto all_key_value_pairs = get_all_key_value_pairs();
-    const auto number_of_elements = all_key_value_pairs.size();
+    const auto number_of_key_value_pairs = all_key_value_pairs.size();
 
-    ofstream output_file(memtable_file_path);
+    ofstream output_file(memtable_config.file_path);
     vector<pair<K, int>> key_offsets;
 
     auto index = 0;
+    auto end_index = number_of_key_value_pairs - 1;
     auto accumulated_offset_from_start = 0;
 
     for (const auto &[key, value] : all_key_value_pairs)
     {
         string key_value_line_to_write;
-        bool valid_key_offset_index = index != 0 && index != number_of_elements - 1 && index % memtable_config.key_offset_frequency == 0;
-        if (valid_key_offset_index)
+        if (is_key_offset_index(index, end_index))
         {
             key_value_line_to_write = key_value_offset_string_to_write(key, value);
             key_offsets.push_back(make_pair(key, accumulated_offset_from_start));
@@ -131,3 +128,8 @@ string Memtable<K, V>::key_value_offset_string_to_write(K key, V value)
     return fmt::format("{}{}{}{}\n", memtable_config.key_offset_indicator, key, memtable_config.key_value_delimeter, value);
 }
 
+template <typename K, typename V>
+bool Memtable<K, V>::is_key_offset_index(int index, int end_index)
+{
+    return index != 0 && index != end_index && index % memtable_config.key_offset_frequency == 0;
+}

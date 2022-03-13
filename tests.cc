@@ -4,7 +4,9 @@
 TEST(MemtableTests, BasicInsertion)
 {
   MemtableConfig memtable_config;
-  Memtable<string, int> memtable(3, "./_test_", memtable_config);
+  memtable_config.file_path = "./_test_";
+  memtable_config.capacity = 3;
+  Memtable<string, int> memtable(memtable_config);
   EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -19,7 +21,10 @@ TEST(MemtableTests, BasicInsertion)
 TEST(MemtableTests, BasicFind)
 {
   MemtableConfig memtable_config;
-  Memtable<string, int> memtable(3, "./_test_", memtable_config);
+  memtable_config.file_path = "./_test_";
+  memtable_config.capacity = 3;
+
+  Memtable<string, int> memtable(memtable_config);
   EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -38,9 +43,11 @@ TEST(MemtableTests, BasicFind)
 
 TEST(MemtableTests, Ordering)
 {
-
   MemtableConfig memtable_config;
-  Memtable<int, string> memtable(3, "./_test_", memtable_config);
+  memtable_config.file_path = "./_test_";
+  memtable_config.capacity = 3;
+
+  Memtable<int, string> memtable(memtable_config);
   EXPECT_EQ(memtable.get_capacity(), 3);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -63,8 +70,10 @@ TEST(MemtableTests, Ordering)
 TEST(MemtableTests, InsertionBeyondCapacity)
 {
   MemtableConfig memtable_config;
+  memtable_config.file_path = "./_test_";
+  memtable_config.capacity = 2;
 
-  Memtable<string, int> memtable(2, "./_test_", memtable_config);
+  Memtable<string, int> memtable(memtable_config);
   EXPECT_EQ(memtable.get_capacity(), 2);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -81,7 +90,10 @@ TEST(MemtableTests, LargeNumberOfElements)
 {
   unsigned int large_capacity = 100000;
   MemtableConfig memtable_config;
-  Memtable<string, int> memtable(large_capacity, "./memtable_test_output", memtable_config);
+  memtable_config.file_path = "./memtable_test_output";
+  memtable_config.capacity = large_capacity;
+
+  Memtable<string, int> memtable(memtable_config);
   EXPECT_EQ(memtable.get_capacity(), large_capacity);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -102,7 +114,10 @@ TEST(MemtableTests, LargeNumberOfElements)
 TEST(SortedStringTableTests, BasicInsertion)
 {
   MemtableConfig memtable_config;
-  SortedStringTable<string, int> ss_table(10, "./_test_", memtable_config);
+  memtable_config.file_path = "./_test_";
+  memtable_config.capacity = 10;
+
+  SortedStringTable<string, int> ss_table(memtable_config);
 
   ss_table.insert("first", 1);
   ss_table.insert("second", 2);
@@ -113,7 +128,10 @@ TEST(SortedStringTableTests, BasicInsertion)
 TEST(SortedStringTableTests, BasicFindOnMemtable)
 {
   MemtableConfig memtable_config;
-  SortedStringTable<string, int> ss_table(10, "./_test_", memtable_config);
+  memtable_config.file_path = "./_test_";
+  memtable_config.capacity = 10;
+
+  SortedStringTable<string, int> ss_table(memtable_config);
 
   ss_table.insert("first", 1);
   ss_table.insert("second", 2);
@@ -128,7 +146,10 @@ TEST(SortedStringTableTests, BasicFindOnMemtable)
 TEST(SortedStringTableTests, BasicFindsOnMostRecentMemtableWrite)
 {
   MemtableConfig memtable_config;
-  SortedStringTable<string, int> ss_table(2, "./_test_", memtable_config);
+  memtable_config.file_path = "./_test_";
+  memtable_config.capacity = 2;
+
+  SortedStringTable<string, int> ss_table(memtable_config);
 
   ss_table.insert("first", 1);
   ss_table.insert("second", 2);
@@ -148,7 +169,10 @@ TEST(MemtableTests, RetrieveKeyOffsets)
 {
   unsigned int large_capacity = 100'000;
   MemtableConfig memtable_config;
-  Memtable<string, int> memtable(large_capacity, "./memtable_test_output", memtable_config);
+  memtable_config.file_path = "./memtable_test_output";
+  memtable_config.capacity = large_capacity;
+
+  Memtable<string, int> memtable(memtable_config);
   EXPECT_EQ(memtable.get_capacity(), large_capacity);
   EXPECT_EQ(memtable.get_size(), 0);
 
@@ -171,7 +195,10 @@ TEST(SortedStringTableTests, SearchSegmentsOnWrittenMemtableFile)
 {
   unsigned int large_capacity = 100'000;
   MemtableConfig memtable_config;
-  SortedStringTable<string, int> ss_table(large_capacity, "./_test_large_search", memtable_config);
+  memtable_config.file_path = "./memtable_test_output";
+  memtable_config.capacity = large_capacity;
+  
+  SortedStringTable<string, int> ss_table(memtable_config);
 
   // insert up to one below capacity
   for (int i = 0; i < large_capacity - 1; ++i)

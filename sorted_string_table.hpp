@@ -17,22 +17,20 @@ requires IsStringLike<K> && IsNumberOrStringLike<V>
 class SortedStringTable
 {
 public:
-    SortedStringTable(unsigned int memtable_capacity, const string memtable_main_filepath, const MemtableConfig memtable_config) : memtable(memtable_capacity, memtable_main_filepath, memtable_config),
-                                                                                                                                   current_size(0),
-                                                                                                                                   memtable_main_filepath(memtable_main_filepath),
-                                                                                                                                   memtable_config(memtable_config){};
+    SortedStringTable(const MemtableConfig memtable_config) : memtable(memtable_config),
+                                                              current_size(0),
+                                                              memtable_config(memtable_config){};
     int get_size() { return current_size; }
     void insert(const K key, const V value);
     optional<V> find(const K key);
 
 private:
     int current_size;
-    string memtable_main_filepath;
     MemtableConfig memtable_config;
     Memtable<K, V> memtable;
 
     int determine_search_start_point(const K key, const vector<pair<K, int>> &memtable_offsets);
-    optional<V> linear_search_over_memtable_file_segment(const string &memtable_file_path, const K key, int starting_point);
+    optional<V> linear_search_over_memtable_file_segment(const K key, int starting_point);
     optional<V> search_stream_for_key_until_next_offset(ifstream &stream, const K key);
 
     bool check_key_equality(const K key, const string &input_line, const size_t delimeter_position);
@@ -59,9 +57,9 @@ optional<V> SortedStringTable<K, V>::find(const K key)
     if (offsets.has_value())
     {
         const auto starting_point = determine_search_start_point(key, offsets.value());
-        return linear_search_over_memtable_file_segment(memtable_main_filepath, key, starting_point);
+        return linear_search_over_memtable_file_segment(key, starting_point);
     }
-    return linear_search_over_memtable_file_segment(memtable_main_filepath, key, 0);
+    return linear_search_over_memtable_file_segment(key, 0);
 }
 
 template <typename K, typename V>
@@ -86,8 +84,9 @@ int SortedStringTable<K, V>::determine_search_start_point(const K key, const vec
 
 template <typename K, typename V>
 requires IsStringLike<K> && IsNumberOrStringLike<V>
-    optional<V> SortedStringTable<K, V>::linear_search_over_memtable_file_segment(const string &memtable_file_path, const K key, int starting_point)
+    optional<V> SortedStringTable<K, V>::linear_search_over_memtable_file_segment(const K key, int starting_point)
 {
+    const auto memtable_file_path = memtable_config.file_path;
     ifstream most_recent_memtable_write(memtable_file_path);
     most_recent_memtable_write.seekg(starting_point);
     const auto search_result = search_stream_for_key_until_next_offset(most_recent_memtable_write, key);
